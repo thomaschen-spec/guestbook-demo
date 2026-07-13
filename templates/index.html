@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>留言板</title>
+<style>
+  body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; max-width: 520px; margin: 60px auto; background: #f7f5f0; color: #272320; padding: 0 16px; }
+  h1 { font-size: 1.6rem; }
+  .hint { color: #8a827f; font-size: .9rem; margin: 0 0 20px; }
+  form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; background: #fff; padding: 16px; border-radius: 12px; }
+  input[type=text], textarea { padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; font-family: inherit; }
+  textarea { resize: vertical; min-height: 70px; }
+  button { padding: 10px 16px; border: none; border-radius: 8px; background: #2f6f8f; color: #fff; font-size: 1rem; cursor: pointer; align-self: flex-end; }
+  #msg { color: #b0472f; font-size: .9rem; min-height: 1.2em; margin-bottom: 12px; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 14px; background: #fff; border-radius: 10px; margin-bottom: 10px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .name { font-weight: 700; }
+  .time { font-size: .78rem; color: #8a827f; }
+  .content { margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
+  .del { margin-top: 8px; background: #999; padding: 3px 10px; font-size: .8rem; align-self: auto; }
+  .empty { color: #8a827f; text-align: center; padding: 20px 0; }
+</style>
+</head>
+<body>
+  <h1>留言板</h1>
+  <p class="hint">大家共用同一份留言，任何人送出的內容，其他人打開就看得到。</p>
+  <form id="form">
+    <input type="text" id="name" placeholder="你的名字（不填就是匿名）" autocomplete="off" maxlength="30">
+    <textarea id="content" placeholder="想說什麼？" maxlength="500" required></textarea>
+    <button type="submit">送出留言</button>
+  </form>
+  <div id="msg"></div>
+  <ul id="list"></ul>
+
+<script>
+function showMsg(text) {
+  document.getElementById('msg').textContent = text || '';
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function load() {
+  let messages;
+  try {
+    const res = await fetch('/api/messages');
+    if (!res.ok) throw new Error('讀取失敗（伺服器回應 ' + res.status + '）');
+    messages = await res.json();
+  } catch (err) {
+    showMsg('讀取留言失敗：' + err.message);
+    return;
+  }
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  if (messages.length === 0) {
+    list.innerHTML = '<li class="empty">還沒有人留言，當第一個吧</li>';
+    return;
+  }
+  messages.forEach(m => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <div class="row">
+        <span class="name">${escapeHtml(m.name)}</span>
+        <span class="time">${m.created_at}</span>
+      </div>
+      <div class="content">${escapeHtml(m.content)}</div>
+      <button class="del">刪除</button>
+    `;
+    li.querySelector('.del').addEventListener('click', async () => {
+      try {
+        const res = await fetch(`/api/messages/${m.id}`, {method: 'DELETE'});
+        if (!res.ok) throw new Error('刪除失敗（伺服器回應 ' + res.status + '）');
+        showMsg('');
+        load();
+      } catch (err) {
+        showMsg(err.message);
+      }
+    });
+    list.appendChild(li);
+  });
+}
+
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nameInput = document.getElementById('name');
+  const contentInput = document.getElementById('content');
+  const content = contentInput.value.trim();
+  if (!content) {
+    showMsg('留言內容不能是空的');
+    return;
+  }
+  try {
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: nameInput.value.trim(), content})
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showMsg(body.error || ('送出失敗（伺服器回應 ' + res.status + '）'));
+      return;
+    }
+    showMsg('');
+    contentInput.value = '';
+    load();
+  } catch (err) {
+    showMsg('連不上伺服器：' + err.message);
+  }
+});
+
+load();
+</script>
+</body>
+</html>
