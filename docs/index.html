@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>留言板（靜態展示頁）</title>
+<style>
+  body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; max-width: 520px; margin: 40px auto; background: #f7f5f0; color: #272320; padding: 0 16px; }
+  h1 { font-size: 1.6rem; }
+  .banner { background: #2f6f8f; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: .85rem; margin-bottom: 16px; }
+  .banner a { color: #fff; }
+  .hint { color: #8a827f; font-size: .9rem; margin: 0 0 20px; }
+  form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; background: #fff; padding: 16px; border-radius: 12px; opacity: .55; }
+  input[type=text], textarea { padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; font-family: inherit; }
+  textarea { resize: vertical; min-height: 70px; }
+  button { padding: 10px 16px; border: none; border-radius: 8px; background: #2f6f8f; color: #fff; font-size: 1rem; cursor: not-allowed; align-self: flex-end; }
+  #msg { color: #b0472f; font-size: .9rem; min-height: 1.2em; margin-bottom: 12px; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 14px; background: #fff; border-radius: 10px; margin-bottom: 10px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .name { font-weight: 700; }
+  .time { font-size: .78rem; color: #8a827f; }
+  .content { margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
+</style>
+</head>
+<body>
+  <h1>留言板</h1>
+  <div class="banner">📌 這是靜態展示頁（GitHub Pages），下面是固定範例留言、表單無法真的送出。
+    <a href="https://guestbook-demo.onrender.com" target="_blank">→ 完整可操作版（Render＋Supabase）</a>
+  </div>
+  <p class="hint">大家共用同一份留言，任何人送出的內容，其他人打開就看得到。</p>
+  <form id="form">
+    <input type="text" placeholder="你的名字（不填就是匿名）" disabled>
+    <textarea placeholder="想說什麼？" disabled></textarea>
+    <button type="button" disabled>送出留言</button>
+  </form>
+  <div id="msg">（靜態展示頁不支援留言，請到上面連結玩完整版）</div>
+  <ul id="list"></ul>
+
+<script>
+const SAMPLE = [
+  {name: "小美", content: "這個留言板做得不錯耶！", time: "2026-07-10 09:12"},
+  {name: "匿名", content: "换個瀏覽器也看得到同一份留言，蠻好玩的。", time: "2026-07-11 14:30"},
+  {name: "阿明", content: "下一步應該要加已讀跟按讚功能。", time: "2026-07-12 20:45"},
+];
+const list = document.getElementById('list');
+SAMPLE.forEach(m => {
+  const li = document.createElement('li');
+  li.innerHTML = `
+    <div class="row"><span class="name">${m.name}</span><span class="time">${m.time}</span></div>
+    <div class="content">${m.content}</div>
+  `;
+  list.appendChild(li);
+});
+</script>
+</body>
+</html>
